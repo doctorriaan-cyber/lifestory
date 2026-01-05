@@ -24,28 +24,18 @@
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         
-        /* Animation for transitions */
         .fade-in { animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Custom color wheel style */
         .color-wheel {
             background: conic-gradient(red, yellow, green, cyan, blue, magenta, red);
         }
 
-        /* Prevent zooming on inputs in iOS/Android */
+        /* Enforce readable input sizes to prevent auto-zoom */
         input[type="date"], input[type="text"], input[type="number"] {
             font-size: 16px !important;
         }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
 </head>
 <body>
     <div id="root"></div>
@@ -57,7 +47,7 @@
         const DEFAULT_LIFESPAN = 90;
         const WEEKS_IN_YEAR = 52;
         const MONTH_WEEKS = [4, 4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 5];
-        const STORAGE_KEY = 'memento_mori_v3_storage';
+        const STORAGE_KEY = 'memento_mori_v4_storage';
         const PRESET_COLORS = [
             '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', 
             '#22c55e', '#10b981', '#06b6d4', '#0ea5e9', '#3b82f6', 
@@ -91,8 +81,8 @@
             useEffect(() => {
                 const handleResize = () => {
                     if (containerRef.current) {
-                        const parentWidth = window.innerWidth - 32;
-                        const gridWidth = 320; 
+                        const parentWidth = window.innerWidth - 48; // Wider margin
+                        const gridWidth = 340; 
                         setScale(parentWidth < gridWidth ? parentWidth / gridWidth : 1);
                     }
                 };
@@ -127,7 +117,7 @@
                                      style={{ 
                                          backgroundColor: color, 
                                          opacity, 
-                                         border: !isLived ? '1px solid rgba(255,255,255,0.2)' : 'none' 
+                                         border: !isLived ? '1.5px solid rgba(255,255,255,0.95)' : 'none' 
                                      }} 
                                 />
                             );
@@ -137,8 +127,9 @@
                     });
 
                     yearRows.push(
-                        <div key={year} className="flex items-center gap-[6px] h-[8px]">
-                            <div className="w-6 text-[8px] text-slate-600 font-mono text-right shrink-0">
+                        <div key={year} className="flex items-center gap-[8px] h-[10px]">
+                            {/* DECADE LABELS - Larger and more legible */}
+                            <div className="w-8 text-[12px] text-slate-500 font-bold font-mono text-right shrink-0">
                                 {year % 5 === 0 ? year : ''}
                             </div>
                             <div className="flex gap-[6px]">{monthGroups}</div>
@@ -147,7 +138,7 @@
                 }
 
                 return (
-                    <div key={startYear} className="flex flex-col gap-[2px] mb-3 p-2 border border-slate-900/50 rounded-md bg-slate-900/10">
+                    <div key={startYear} className="flex flex-col gap-[3px] mb-4 p-3 border border-slate-900 rounded-lg bg-slate-900/20">
                         {yearRows}
                     </div>
                 );
@@ -157,25 +148,25 @@
             for (let y = 0; y < lifespanYears; y += 10) decades.push(renderDecade(y));
 
             return (
-                <div className="flex flex-col items-center py-6 w-full select-none">
-                    <div className="mb-10 w-full max-w-sm px-6 flex flex-col items-center text-center">
-                        <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-500 mb-2">Life Chapters</h3>
-                        <p className="text-[10px] font-mono tracking-widest uppercase text-slate-600 mb-6 opacity-70">Each dot is one week</p>
+                <div className="flex flex-col items-center py-8 w-full select-none">
+                    <div className="mb-12 w-full max-w-sm px-8 flex flex-col items-center text-center">
+                        <h3 className="text-sm font-black uppercase tracking-[0.4em] text-slate-500 mb-3">Life Chapters</h3>
+                        <p className="text-xs font-mono tracking-widest uppercase text-slate-600 mb-8 opacity-70">One dot = One week</p>
                         
-                        <div className="flex flex-wrap justify-center gap-x-4 gap-y-3 w-full">
+                        <div className="flex flex-wrap justify-center gap-x-5 gap-y-4 w-full">
                             {(sections || []).map(s => (
-                                <div key={s.id} className="flex items-center gap-2 text-[10px]">
-                                    <div className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: s.color }} />
-                                    <span className="text-slate-400 font-medium truncate">{s.label}</span>
+                                <div key={s.id} className="flex items-center gap-2.5 text-xs">
+                                    <div className="w-3 h-3 rounded-full shrink-0 shadow-md" style={{ backgroundColor: s.color }} />
+                                    <span className="text-slate-400 font-semibold truncate">{s.label}</span>
                                 </div>
                             ))}
-                            <div className="flex items-center gap-2 text-[10px]">
-                                <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />
-                                <span className="text-slate-400 font-medium">Lived</span>
+                            <div className="flex items-center gap-2.5 text-xs">
+                                <div className="w-3 h-3 rounded-full bg-white shadow-md" />
+                                <span className="text-slate-400 font-semibold">Lived</span>
                             </div>
-                            <div className="flex items-center gap-2 text-[10px]">
-                                <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
-                                <span className="text-slate-400 font-medium">Future</span>
+                            <div className="flex items-center gap-2.5 text-xs">
+                                <div className="w-3 h-3 rounded-full border-2 border-white/90" />
+                                <span className="text-slate-400 font-semibold">Future</span>
                             </div>
                         </div>
                     </div>
@@ -218,104 +209,102 @@
                     <div className="flex justify-between items-center mb-10 mt-2">
                         <div>
                             <h1 className="text-3xl font-black tracking-tight text-white uppercase italic">Profile</h1>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Settings & History</p>
+                            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Settings & History</p>
                         </div>
-                        <button onClick={onClose} className="p-3 rounded-full bg-slate-900 border border-white/10 text-slate-100 active:scale-90 transition-transform">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        <button onClick={onClose} className="p-3.5 rounded-full bg-slate-900 border border-white/10 text-slate-100 active:scale-90 transition-transform shadow-lg">
+                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
 
-                    <div className="space-y-10 max-w-lg mx-auto w-full pb-32">
-                        {/* THE BASICS */}
-                        <section className="bg-slate-900/40 p-6 rounded-2xl space-y-6 border border-white/5">
-                            <h2 className="text-xs font-black uppercase tracking-[0.2em] text-blue-500">The Basics</h2>
-                            <div className="space-y-4">
-                                <div className="space-y-1.5">
-                                    <label className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">Date of Birth</label>
+                    <div className="space-y-12 max-w-lg mx-auto w-full pb-36">
+                        <section className="bg-slate-900/60 p-7 rounded-3xl space-y-7 border border-white/5">
+                            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-blue-500">The Basics</h2>
+                            <div className="space-y-5">
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider">Date of Birth</label>
                                     <input 
                                         type="date" 
                                         value={formData.dob} 
                                         onChange={(e) => setFormData({ ...formData, dob: e.target.value })} 
-                                        className="w-full bg-slate-900 border border-white/10 rounded-xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" 
+                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-5 text-white text-lg outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" 
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="block text-[10px] font-bold uppercase text-slate-500 tracking-wider">Lifespan Goal (Years)</label>
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-bold uppercase text-slate-400 tracking-wider">Lifespan Goal (Years)</label>
                                     <input 
                                         type="number" 
                                         value={formData.lifespanYears} 
                                         onChange={(e) => setFormData({ ...formData, lifespanYears: parseInt(e.target.value) || 90 })} 
-                                        className="w-full bg-slate-900 border border-white/10 rounded-xl p-4 text-white outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" 
+                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-5 text-white text-lg outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" 
                                     />
                                 </div>
                             </div>
                         </section>
 
-                        {/* CHAPTERS */}
-                        <section className="space-y-6">
+                        <section className="space-y-8">
                             <div className="flex justify-between items-center px-2">
-                                <h2 className="text-xs font-black uppercase tracking-[0.2em] text-blue-500">Life Chapters</h2>
+                                <h2 className="text-sm font-black uppercase tracking-[0.2em] text-blue-500">Life Chapters</h2>
                                 <button 
                                     onClick={handleAddSection} 
-                                    className="text-[10px] bg-white text-black px-4 py-2 rounded-full font-black uppercase tracking-wider active:scale-95 transition-transform"
+                                    className="text-xs bg-white text-black px-5 py-3 rounded-full font-black uppercase tracking-widest active:scale-95 transition-transform shadow-xl"
                                 >
-                                    + Add Chapter
+                                    + Add New
                                 </button>
                             </div>
                             
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 {formData.sections.map((section) => {
                                     const isCustomColor = !PRESET_COLORS.includes(section.color);
                                     return (
-                                        <div key={section.id} className="bg-slate-900/40 p-5 rounded-2xl space-y-5 border border-white/5 border-l-4" style={{ borderLeftColor: section.color }}>
-                                            <div className="flex justify-between items-start gap-3">
+                                        <div key={section.id} className="bg-slate-900/60 p-6 rounded-3xl space-y-6 border border-white/5 border-l-8" style={{ borderLeftColor: section.color }}>
+                                            <div className="flex justify-between items-start gap-4">
                                                 <input 
                                                     type="text" 
                                                     value={section.label} 
                                                     onChange={(e) => updateSection(section.id, { label: e.target.value })} 
-                                                    className="flex-1 bg-transparent text-xl font-bold text-white outline-none placeholder-slate-700"
+                                                    className="flex-1 bg-transparent text-2xl font-black text-white outline-none placeholder-slate-800"
                                                     placeholder="Chapter Title..."
                                                 />
-                                                <button onClick={() => removeSection(section.id)} className="text-slate-600 hover:text-red-400 p-1 active:scale-90 transition-transform">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                <button onClick={() => removeSection(section.id)} className="text-slate-600 hover:text-red-500 p-2 active:scale-90 transition-transform">
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                 </button>
                                             </div>
                                             
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-1.5">
-                                                    <label className="text-slate-600 block text-[9px] uppercase font-black tracking-widest">Start Date</label>
+                                            <div className="grid grid-cols-2 gap-5">
+                                                <div className="space-y-2">
+                                                    <label className="text-slate-500 block text-[10px] uppercase font-black tracking-[0.2em]">Started</label>
                                                     <input 
                                                         type="date" 
                                                         value={section.startDate} 
                                                         onChange={(e) => updateSection(section.id, { startDate: e.target.value })} 
-                                                        className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-xs text-white outline-none" 
+                                                        className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-sm text-white outline-none" 
                                                     />
                                                 </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-slate-600 block text-[9px] uppercase font-black tracking-widest">End Date</label>
+                                                <div className="space-y-2">
+                                                    <label className="text-slate-500 block text-[10px] uppercase font-black tracking-[0.2em]">Ended</label>
                                                     <div className="relative">
                                                         <input 
                                                             type="date" 
                                                             value={section.endDate === 'current' ? '' : section.endDate} 
                                                             onChange={(e) => updateSection(section.id, { endDate: e.target.value || 'current' })} 
-                                                            className="w-full bg-slate-950 border border-white/5 p-3 rounded-xl text-xs text-white outline-none" 
+                                                            className="w-full bg-slate-950 border border-white/5 p-4 rounded-2xl text-sm text-white outline-none" 
                                                             placeholder="Until Today"
                                                         />
                                                         {section.endDate === 'current' && (
-                                                            <div className="absolute inset-0 bg-slate-950 rounded-xl flex items-center px-3 pointer-events-none">
-                                                                <span className="text-blue-500 font-bold text-xs uppercase tracking-wider">Ongoing</span>
+                                                            <div className="absolute inset-0 bg-slate-950 rounded-2xl flex items-center px-4 pointer-events-none">
+                                                                <span className="text-blue-500 font-black text-xs uppercase tracking-[0.2em]">Ongoing</span>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-wrap gap-2.5 pt-2 items-center">
+                                            <div className="flex flex-wrap gap-3 pt-2 items-center">
                                                 {PRESET_COLORS.map(c => (
                                                     <button 
                                                         key={c} 
                                                         onClick={() => updateSection(section.id, { color: c })} 
-                                                        className={`w-7 h-7 rounded-full transition-all ${section.color === c ? 'ring-2 ring-white ring-offset-4 ring-offset-slate-950 scale-110 z-10' : 'opacity-60 hover:opacity-100 hover:scale-110'}`} 
+                                                        className={`w-8 h-8 rounded-full transition-all ${section.color === c ? 'ring-2 ring-white ring-offset-4 ring-offset-slate-950 scale-125 z-10' : 'opacity-50 hover:opacity-100 hover:scale-110'}`} 
                                                         style={{ backgroundColor: c }} 
                                                     />
                                                 ))}
@@ -328,30 +317,25 @@
                                                     />
                                                     <button 
                                                         onClick={() => colorInputRefs.current[section.id].click()} 
-                                                        className={`w-7 h-7 rounded-full color-wheel relative overflow-hidden transition-all ${isCustomColor ? 'ring-2 ring-white ring-offset-4 ring-offset-slate-950 scale-110 z-10' : 'opacity-60 hover:opacity-100 hover:scale-110'}`}
+                                                        className={`w-8 h-8 rounded-full color-wheel relative overflow-hidden transition-all ${isCustomColor ? 'ring-2 ring-white ring-offset-4 ring-offset-slate-950 scale-125 z-10' : 'opacity-50 hover:opacity-100 hover:scale-110'}`}
                                                     >
-                                                        {isCustomColor && <div className="absolute inset-0.5 rounded-full border border-white/50" style={{ backgroundColor: section.color }} />}
+                                                        {isCustomColor && <div className="absolute inset-1 rounded-full border border-white/50" style={{ backgroundColor: section.color }} />}
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     );
                                 })}
-                                {formData.sections.length === 0 && (
-                                    <div className="text-center py-12 px-6 border-2 border-dashed border-white/5 rounded-3xl">
-                                        <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">No chapters added yet</p>
-                                    </div>
-                                )}
                             </div>
                         </section>
                     </div>
 
-                    <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+                    <div className="fixed bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
                         <button 
                             onClick={() => onSave(formData)} 
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/40 active:scale-95 transition-all"
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-3xl font-black uppercase tracking-[0.3em] shadow-2xl shadow-blue-900/40 active:scale-95 transition-all text-sm"
                         >
-                            Save Changes
+                            Save Chapters
                         </button>
                     </div>
                 </div>
@@ -369,7 +353,6 @@
                         console.error("Failed to load data", e);
                     }
                 }
-                // Default setup for a fresh start
                 const d = new Date(); d.setFullYear(d.getFullYear() - 25);
                 return { 
                     dob: d.toISOString().split('T')[0], 
@@ -378,7 +361,6 @@
                 };
             });
 
-            // Save to LocalStorage whenever data changes
             useEffect(() => {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             }, [data]);
@@ -390,17 +372,17 @@
 
             return (
                 <div className="min-h-screen flex flex-col bg-slate-950 text-slate-50 relative overflow-x-hidden">
-                    <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-xl border-b border-white/5 px-6 py-5 flex justify-between items-center">
+                    <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-2xl border-b border-white/5 px-8 py-6 flex justify-between items-center shadow-xl">
                         <div className="flex flex-col">
-                            <h1 className="text-xl font-black tracking-tight uppercase italic text-white leading-none">Memento Mori</h1>
-                            <p className="text-[9px] text-slate-600 font-bold tracking-[0.4em] uppercase mt-1">Life in Weeks</p>
+                            <h1 className="text-2xl font-black tracking-tight uppercase italic text-white leading-none">Memento Mori</h1>
+                            <p className="text-[10px] text-slate-500 font-black tracking-[0.5em] uppercase mt-2">Life in Weeks</p>
                         </div>
                         <button 
                             onClick={() => setView('settings')} 
-                            className="p-3 rounded-full bg-slate-900/50 border border-white/10 active:scale-90 transition-all hover:bg-slate-800"
+                            className="p-3.5 rounded-2xl bg-slate-900/80 border border-white/10 active:scale-90 transition-all hover:bg-slate-800 shadow-inner"
                         >
-                            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                            <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16m-7 6h7" />
                             </svg>
                         </button>
                     </header>
@@ -417,9 +399,8 @@
                         />
                     )}
 
-                    {/* Subtle footer */}
-                    <footer className="py-8 flex justify-center opacity-20 select-none">
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Enjoy the journey</span>
+                    <footer className="py-12 flex flex-col items-center gap-2 opacity-30 select-none">
+                        <span className="text-xs font-black uppercase tracking-[0.4em]">Tempus Fugit</span>
                     </footer>
                 </div>
             );
