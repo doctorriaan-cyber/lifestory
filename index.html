@@ -68,6 +68,7 @@
             const birthDate = useMemo(() => new Date(dob), [dob]);
             const now = useMemo(() => new Date(), []);
             const containerRef = useRef(null);
+            const gridWrapperRef = useRef(null);
             const [scale, setScale] = useState(1);
 
             const sectionDates = useMemo(() => {
@@ -80,16 +81,25 @@
 
             useEffect(() => {
                 const handleResize = () => {
-                    if (containerRef.current) {
-                        const parentWidth = window.innerWidth - 48; // Wider margin
-                        const gridWidth = 340; 
-                        setScale(parentWidth < gridWidth ? parentWidth / gridWidth : 1);
+                    if (gridWrapperRef.current) {
+                        const parentWidth = window.innerWidth - 32; // Standard side padding
+                        const gridWidth = gridWrapperRef.current.scrollWidth; 
+                        if (gridWidth > parentWidth) {
+                            setScale(parentWidth / gridWidth);
+                        } else {
+                            setScale(1);
+                        }
                     }
                 };
                 handleResize();
                 window.addEventListener('resize', handleResize);
-                return () => window.removeEventListener('resize', handleResize);
-            }, []);
+                // Extra delay to ensure layout is ready
+                const timer = setTimeout(handleResize, 100);
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    clearTimeout(timer);
+                };
+            }, [userData.lifespanYears]);
 
             const renderDecade = (startYear) => {
                 const yearRows = [];
@@ -128,9 +138,9 @@
 
                     yearRows.push(
                         <div key={year} className="flex items-center gap-[8px] h-[10px]">
-                            {/* DECADE LABELS - Larger and more legible */}
+                            {/* DECADE LABELS - Only show 0, 10, 20... */}
                             <div className="w-8 text-[12px] text-slate-500 font-bold font-mono text-right shrink-0">
-                                {year % 5 === 0 ? year : ''}
+                                {year % 10 === 0 ? year : ''}
                             </div>
                             <div className="flex gap-[6px]">{monthGroups}</div>
                         </div>
@@ -148,10 +158,10 @@
             for (let y = 0; y < lifespanYears; y += 10) decades.push(renderDecade(y));
 
             return (
-                <div className="flex flex-col items-center py-8 w-full select-none">
-                    <div className="mb-12 w-full max-w-sm px-8 flex flex-col items-center text-center">
+                <div className="flex flex-col items-center py-8 w-full select-none overflow-hidden">
+                    <div className="mb-8 w-full max-w-sm px-6 flex flex-col items-center text-center">
                         <h3 className="text-sm font-black uppercase tracking-[0.4em] text-slate-500 mb-3">Life Chapters</h3>
-                        <p className="text-xs font-mono tracking-widest uppercase text-slate-600 mb-8 opacity-70">One dot = One week</p>
+                        <p className="text-xs font-mono tracking-widest uppercase text-slate-600 mb-6 opacity-70">One dot = One week</p>
                         
                         <div className="flex flex-wrap justify-center gap-x-5 gap-y-4 w-full">
                             {(sections || []).map(s => (
@@ -171,8 +181,13 @@
                         </div>
                     </div>
                     
-                    <div ref={containerRef} style={{ transform: `scale(${scale})`, transformOrigin: 'top center', width: 'fit-content' }}>
-                        {decades}
+                    <div 
+                        className="flex flex-col items-center origin-top transition-transform duration-300 ease-out"
+                        style={{ transform: `scale(${scale})` }}
+                    >
+                        <div ref={gridWrapperRef} className="flex flex-col items-center">
+                            {decades}
+                        </div>
                     </div>
                 </div>
             );
@@ -400,7 +415,7 @@
                     )}
 
                     <footer className="py-12 flex flex-col items-center gap-2 opacity-30 select-none">
-                        <span className="text-xs font-black uppercase tracking-[0.4em]">Tempus Fugit</span>
+                        <span className="text-xs font-black uppercase tracking-[0.4em]">Enjoy the journey</span>
                     </footer>
                 </div>
             );
