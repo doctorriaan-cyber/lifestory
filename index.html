@@ -31,7 +31,7 @@
             background: conic-gradient(red, yellow, green, cyan, blue, magenta, red);
         }
 
-        /* Enforce readable input sizes to prevent auto-zoom */
+        /* Enforce readable input sizes to prevent auto-zoom on mobile Chrome */
         input[type="date"], input[type="text"], input[type="number"] {
             font-size: 16px !important;
         }
@@ -45,8 +45,7 @@
 
         // --- CONSTANTS ---
         const DEFAULT_LIFESPAN = 90;
-        const WEEKS_IN_YEAR = 52;
-        const MONTH_WEEKS = [4, 4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 5];
+        const MONTH_WEEKS = [4, 4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 5]; // Sums to 52
         const STORAGE_KEY = 'memento_mori_v4_storage';
         const PRESET_COLORS = [
             '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', 
@@ -55,9 +54,11 @@
         ];
 
         // --- HELPERS ---
-        const getDateForWeek = (dob, year, week) => {
-            const date = new Date(dob);
-            date.setDate(date.getDate() + (year * WEEKS_IN_YEAR + week) * 7);
+        // Aligns grid to calendar months. Year 0 is birth year.
+        const getCalendarDateForGridPos = (birthDate, ageYear, monthIndex, weekInMonthIndex) => {
+            const calYear = birthDate.getFullYear() + ageYear;
+            // Approximate date for the week block: Start of month + (weekIndex * 7) days
+            const date = new Date(calYear, monthIndex, (weekInMonthIndex * 7) + 1);
             return date;
         };
 
@@ -67,7 +68,6 @@
             const { dob, lifespanYears, sections } = userData;
             const birthDate = useMemo(() => new Date(dob), [dob]);
             const now = useMemo(() => new Date(), []);
-            const containerRef = useRef(null);
             const gridWrapperRef = useRef(null);
             const [scale, setScale] = useState(1);
 
@@ -82,7 +82,8 @@
             useEffect(() => {
                 const handleResize = () => {
                     if (gridWrapperRef.current) {
-                        const parentWidth = window.innerWidth - 32; // Standard side padding
+                        const horizontalMargin = 32;
+                        const parentWidth = window.innerWidth - horizontalMargin;
                         const gridWidth = gridWrapperRef.current.scrollWidth; 
                         if (gridWidth > parentWidth) {
                             setScale(parentWidth / gridWidth);
@@ -93,8 +94,7 @@
                 };
                 handleResize();
                 window.addEventListener('resize', handleResize);
-                // Extra delay to ensure layout is ready
-                const timer = setTimeout(handleResize, 100);
+                const timer = setTimeout(handleResize, 150);
                 return () => {
                     window.removeEventListener('resize', handleResize);
                     clearTimeout(timer);
@@ -103,23 +103,33 @@
 
             const renderDecade = (startYear) => {
                 const yearRows = [];
-                const endYear = Math.min(startYear + 10, lifespanYears);
+                const endYear = Math.min(startYear + 10, lifespanYears + 1);
 
                 for (let year = startYear; year < endYear; year++) {
                     const monthGroups = [];
-                    let currentWeekInYear = 0;
 
                     MONTH_WEEKS.forEach((numWeeks, monthIdx) => {
                         const dots = [];
                         for (let w = 0; w < numWeeks; w++) {
-                            const weekDate = getDateForWeek(birthDate, year, currentWeekInYear);
-                            let isLived = weekDate <= now;
-                            let color = isLived ? '#FFFFFF' : 'transparent';
-                            let opacity = isLived ? '1' : '0.2';
+                            const weekDate = getCalendarDateForGridPos(birthDate, year, monthIdx, w);
                             
+                            const isLived = weekDate >= birthDate && weekDate <= now;
+                            const isFuture = weekDate > now;
+                            const isPreBirth = weekDate < birthDate;
+
+                            let color = isLived ? '#FFFFFF' : 'transparent';
+                            let opacity = '1';
+                            let borderStyle = 'none';
+
                             if (isLived) {
                                 const activeSection = sectionDates.find(s => weekDate >= s.start && weekDate < s.end);
                                 if (activeSection) color = activeSection.color;
+                            } else if (isFuture) {
+                                opacity = '0.2';
+                                borderStyle = '1.5px solid rgba(255,255,255,0.95)';
+                            } else if (isPreBirth) {
+                                opacity = '0.05';
+                                color = '#FFFFFF'; // Faint indicator of the grid
                             }
 
                             dots.push(
@@ -127,18 +137,17 @@
                                      style={{ 
                                          backgroundColor: color, 
                                          opacity, 
-                                         border: !isLived ? '1.5px solid rgba(255,255,255,0.95)' : 'none' 
+                                         border: borderStyle 
                                      }} 
                                 />
                             );
-                            currentWeekInYear++;
                         }
                         monthGroups.push(<div key={monthIdx} className="flex gap-[2px]">{dots}</div>);
                     });
 
                     yearRows.push(
                         <div key={year} className="flex items-center gap-[8px] h-[10px]">
-                            {/* DECADE LABELS - Only show 0, 10, 20... */}
+                            {/* VERTICAL AXIS - Only Decades: 0, 10, 20... */}
                             <div className="w-8 text-[12px] text-slate-500 font-bold font-mono text-right shrink-0">
                                 {year % 10 === 0 ? year : ''}
                             </div>
@@ -155,13 +164,13 @@
             };
 
             const decades = [];
-            for (let y = 0; y < lifespanYears; y += 10) decades.push(renderDecade(y));
+            for (let y = 0; y <= lifespanYears; y += 10) decades.push(renderDecade(y));
 
             return (
                 <div className="flex flex-col items-center py-8 w-full select-none overflow-hidden">
                     <div className="mb-8 w-full max-w-sm px-6 flex flex-col items-center text-center">
                         <h3 className="text-sm font-black uppercase tracking-[0.4em] text-slate-500 mb-3">Life Chapters</h3>
-                        <p className="text-xs font-mono tracking-widest uppercase text-slate-600 mb-6 opacity-70">One dot = One week</p>
+                        <p className="text-xs font-mono tracking-widest uppercase text-slate-600 mb-6 opacity-70">Grid aligned to calendar months</p>
                         
                         <div className="flex flex-wrap justify-center gap-x-5 gap-y-4 w-full">
                             {(sections || []).map(s => (
